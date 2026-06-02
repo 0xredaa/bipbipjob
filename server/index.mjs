@@ -25,11 +25,9 @@ app.disable('x-powered-by');
 app.use(express.json());
 app.use(cookieParser());
 
-const oauthStates = new Map();
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, exp] of oauthStates) if (exp < now) oauthStates.delete(k);
-}, 60_000).unref();
+// Behind HTTPS on Vercel (or any production host): mark cookies Secure and run
+// without a long-lived listener. Local dev (`npm run server`) stays plain HTTP.
+const IS_PROD = Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production';
 
 const log = (...a) => console.log(`[api ${new Date().toISOString()}]`, ...a);
 
@@ -42,7 +40,7 @@ async function createSession(res, userId) {
   res.cookie('sid', session.id, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: false, // set true behind HTTPS in production
+    secure: IS_PROD,
     maxAge: SESSION_MS,
     path: '/',
   });
@@ -243,7 +241,16 @@ app.get('/api/auth/linkedin', (_req, res) => {
       .send('LinkedIn non configuré (server/.env).');
   }
   const state = crypto.randomBytes(16).toString('hex');
-  oauthStates.set(state, Date.now() + 10 * 60 * 1000);
+  // Stateless CSRF protection: the state lives in an httpOnly cookie that comes
+  // back on the top-level (SameSite=Lax) redirect, so it survives across the
+  // separate serverless invocations that handle /linkedin and /linkedin/callback.
+  res.cookie('li_oauth_state', state, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: IS_PROD,
+    maxAge: 10 * 60 * 1000,
+    path: '/',
+  });
   const url = new URL('https://www.linkedin.com/oauth/v2/authorization');
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('client_id', LINKEDIN_CLIENT_ID);
@@ -261,10 +268,11 @@ app.get('/api/auth/linkedin/callback', async (req, res) => {
     res.redirect(u.toString());
   };
   if (error) return back({ error: String(error_description || error) });
-  if (!code || !state || !oauthStates.has(String(state))) {
+  const savedState = req.cookies?.li_oauth_state;
+  res.clearCookie('li_oauth_state', { path: '/' });
+  if (!code || !state || !savedState || String(state) !== savedState) {
     return back({ error: 'État OAuth invalide ou expiré.' });
   }
-  oauthStates.delete(String(state));
 
   try {
     const token = await fetchJson('https://www.linkedin.com/oauth/v2/accessToken', {
@@ -443,13 +451,23 @@ app.post('/api/feedback', async (req, res) => {
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 
-const server = app.listen(Number(PORT), () => {
-  log(`backend prêt sur http://localhost:${PORT}`);
-  if (!LINKEDIN_CONFIGURED) log('⚠️  LinkedIn non configuré (server/.env).');
-});
+// On Vercel this module is imported by api/index.mjs and used as the serverless
+// request handler, so it must NOT bind a port. Only start a long-lived listener
+// when the file is run directly for local development (`npm run server`).
+const isDirectRun =
+  process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
 
-for (const sig of ['SIGINT', 'SIGTERM']) {
-  process.on(sig, () => {
-    server.close(() => prisma.$disconnect().finally(() => process.exit(0)));
+if (!process.env.VERCEL && isDirectRun) {
+  const server = app.listen(Number(PORT), () => {
+    log(`backend prêt sur http://localhost:${PORT}`);
+    if (!LINKEDIN_CONFIGURED) log('⚠️  LinkedIn non configuré (server/.env).');
   });
+
+  for (const sig of ['SIGINT', 'SIGTERM']) {
+    process.on(sig, () => {
+      server.close(() => prisma.$disconnect().finally(() => process.exit(0)));
+    });
+  }
 }
+
+export default app;
