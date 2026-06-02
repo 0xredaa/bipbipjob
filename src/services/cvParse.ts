@@ -138,22 +138,28 @@ function extractExperiences(lines: string[]): CVExperience[] {
   return experiences;
 }
 
+const DEGREE_RE =
+  /\b(master|licence|bachelor|bts|dut|but|mba|doctorat|phd|ingénieur|diplôme|baccalauréat|\bbac\b|msc|bsc)\b/i;
+const SCHOOL_RE = /(université|universit|école|ecole|faculté|institut|school|college)/i;
+const YEAR_ONLY = /^\(?\s*(?:19|20)\d{2}(?:\s*[-–—]\s*(?:19|20)\d{2})?\s*\)?$/;
+
 function extractEducation(lines: string[]): CVEducation[] {
   const education: CVEducation[] = [];
-  for (const line of lines) {
-    if (SECTION_HEADER.test(line)) continue;
-    if (!EDUCATION_KEYWORDS.test(line)) continue;
-    if (line.length > 120) continue;
-    const yearMatch = line.match(SINGLE_YEAR);
-    const year = yearMatch ? yearMatch[0] : '';
-    const noYear = line.replace(SINGLE_YEAR, '').replace(/[·•]\s*$/, '').trim();
-    const { role, company } = splitRoleCompany(noYear);
-    education.push({
-      degree: (role || noYear).slice(0, 80),
-      school: company.slice(0, 80) || '—',
-      year,
-    });
-    if (education.length >= 4) break;
+  for (let i = 0; i < lines.length && education.length < 4; i++) {
+    const line = lines[i];
+    if (SECTION_HEADER.test(line) || line.length > 120) continue;
+    if (!DEGREE_RE.test(line)) continue; // only real degree titles, not bare schools
+
+    const degree = line.replace(SINGLE_YEAR, '').replace(/[·•]\s*$/, '').trim();
+    let year = (line.match(SINGLE_YEAR) ?? [''])[0];
+    let school = '';
+    // Year + school often sit on the next 1–2 lines.
+    for (let j = i + 1; j < Math.min(i + 3, lines.length); j++) {
+      const nl = lines[j];
+      if (!year && YEAR_ONLY.test(nl)) year = (nl.match(SINGLE_YEAR) ?? [''])[0];
+      else if (!school && SCHOOL_RE.test(nl) && !DEGREE_RE.test(nl)) school = nl.trim();
+    }
+    education.push({ degree: degree.slice(0, 80), school: (school || '—').slice(0, 80), year });
   }
   return education;
 }
