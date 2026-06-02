@@ -17,6 +17,7 @@ interface MachineSceneProps {
   actionId: number;
   actionType: MachineActionType;
   onExitComplete: () => void;
+  onSelectOffer?: () => void;
 }
 
 /** Everything that lives inside the <Canvas> for the main machine. */
@@ -28,6 +29,7 @@ export function MachineScene({
   actionId,
   actionType,
   onExitComplete,
+  onSelectOffer,
 }: MachineSceneProps) {
   return (
     <>
@@ -51,7 +53,7 @@ export function MachineScene({
         <ConveyorBelt />
         <DigitalScreen offer={offer} remaining={remaining} total={total} />
         <NeonLights />
-        <Package offer={offer} phase={phase} onExitComplete={onExitComplete} />
+        <Package offer={offer} phase={phase} onExitComplete={onExitComplete} onSelect={onSelectOffer} />
         <ParticleBurst actionId={actionId} type={actionType} />
       </ShakeGroup>
 

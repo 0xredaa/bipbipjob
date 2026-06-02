@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useStore } from '@/store/useStore';
 import { AuthShell } from './Login';
+import { LinkedInButton } from '@/components/LinkedInButton';
 import { UploadIcon, CheckIcon } from '@/components/icons';
 import type { ContractType } from '@/types';
 
@@ -10,6 +11,7 @@ const CONTRACTS: ContractType[] = ['CDI', 'CDD', 'Freelance', 'Stage', 'Alternan
 
 export function RegisterPage() {
   const register = useStore((s) => s.register);
+  const setCvFile = useStore((s) => s.setCvFile);
   const navigate = useNavigate();
   const photoInput = useRef<HTMLInputElement>(null);
 
@@ -17,6 +19,7 @@ export function RegisterPage() {
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
     phone: '',
     contract: 'CDI' as ContractType,
     job: '',
@@ -37,21 +40,32 @@ export function RegisterPage() {
 
   const handleCv = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setCvFileName(file.name);
+    if (file) {
+      setCvFileName(file.name);
+      setCvFile(file); // keep the real file for on-device parsing
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (form.password.length < 6) {
+      toast.error('Mot de passe : 6 caractères minimum');
+      return;
+    }
     if (!cvFileName) {
       toast.error('Ajoutez votre CV pour continuer');
       return;
     }
     setLoading(true);
-    window.setTimeout(() => {
-      register({ ...form, photoUrl, cvFileName });
-      toast.success('Compte créé — analyse de votre CV', { icon: '✅' });
-      navigate('/cv-analysis');
-    }, 700);
+    try {
+      await register({ ...form, photoUrl, cvFileName });
+      toast.success('Compte créé — choisissez votre plan', { icon: '✅' });
+      navigate('/plans');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Échec de la création du compte');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,6 +74,10 @@ export function RegisterPage() {
       title="Créer un compte"
       subtitle="Votre profil sera envoyé aux entreprises à chaque match."
     >
+      <LinkedInButton label="S'inscrire avec LinkedIn" />
+      <div className="my-5 flex items-center gap-3 text-xs text-white/30">
+        <span className="h-px flex-1 bg-white/10" /> ou remplir manuellement <span className="h-px flex-1 bg-white/10" />
+      </div>
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Photo + identity */}
         <div className="flex items-center gap-4">
@@ -92,6 +110,7 @@ export function RegisterPage() {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Email" type="email" required value={form.email} onChange={(v) => set('email', v)} placeholder="vous@exemple.com" />
+          <Field label="Mot de passe" type="password" required value={form.password} onChange={(v) => set('password', v)} placeholder="6 caractères min." />
           <Field label="Téléphone" type="tel" required value={form.phone} onChange={(v) => set('phone', v)} placeholder="+33 6 …" />
         </div>
 

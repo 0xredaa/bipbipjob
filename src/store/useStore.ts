@@ -1,32 +1,27 @@
 import { create } from 'zustand';
-import type { CVAnalysis, Credits, JobOffer, JobSector, Match, Plan, User } from '@/types';
-import { MOCK_USER } from '@/services/mockData';
-import {
-  analyzeCV,
-  consumeCredit,
-  getCredits,
-  getNextOffer,
-  sendMatch,
-  upgradePlan,
-} from '@/services/api';
+import type { Credits, JobOffer, JobSector, Match, Plan, User } from '@/types';
+import * as api from '@/services/api';
 
 interface AppState {
   // Auth / user
   user: User | null;
   isAuthenticated: boolean;
-  login: (user?: Partial<User>) => void;
-  logout: () => void;
-  register: (user: Partial<User>) => void;
+  /** True once the initial /me hydration has resolved (avoids auth flicker). */
+  hydrated: boolean;
+  hydrate: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (input: Partial<User> & { email: string; password: string }) => Promise<void>;
+  logout: () => Promise<void>;
+  updateProfile: (patch: Partial<User>) => Promise<void>;
 
   // Credits
   credits: Credits | null;
   refreshCredits: () => Promise<void>;
-  /** Switch plan (used by the post-registration plan picker & upgrade). */
   selectPlan: (plan: Plan) => Promise<void>;
 
-  // CV analysis
-  isAnalyzing: boolean;
-  runCVAnalysis: () => Promise<CVAnalysis>;
+  // CV file — uploaded at registration, sent to companies on a match
+  cvFile: File | null;
+  setCvFile: (file: File | null) => void;
 
   // Sectors the user wants to see on the conveyor (empty = all)
   selectedSectors: JobSector[];
@@ -39,59 +34,76 @@ interface AppState {
 
   // Matches
   matches: Match[];
+  loadMatches: () => Promise<void>;
 
-  // Actions on the conveyor
-  /** Returns true if the match succeeded (a credit was consumed). */
+  // Conveyor actions
+  /** Returns true if the match succeeded (a credit was consumed server-side). */
   matchCurrent: () => Promise<boolean>;
   skipCurrent: () => Promise<void>;
 
-  // UI flags
   isProcessing: boolean;
 }
 
 export const useStore = create<AppState>((set, get) => ({
-  user: MOCK_USER,
-  isAuthenticated: true,
+  user: null,
+  isAuthenticated: false,
+  hydrated: false,
 
-  login: (user) =>
-    set({ isAuthenticated: true, user: { ...MOCK_USER, ...user } }),
-  logout: () => set({ isAuthenticated: false, user: null }),
-  register: (user) =>
+  hydrate: async () => {
+    try {
+      const me = await api.getMe();
+      if (me) {
+        set({ user: me.user, credits: me.credits, isAuthenticated: true });
+        void get().loadMatches();
+      } else {
+        set({ isAuthenticated: false, user: null });
+      }
+    } finally {
+      set({ hydrated: true });
+    }
+  },
+
+  login: async (email, password) => {
+    const { user, credits } = await api.login(email, password);
+    set({ user, credits, isAuthenticated: true });
+    void get().loadMatches();
+  },
+
+  register: async (input) => {
+    const { user, credits } = await api.register(input);
+    set({ user, credits, isAuthenticated: true });
+  },
+
+  logout: async () => {
+    await api.logout().catch(() => {});
     set({
-      isAuthenticated: true,
-      user: { ...MOCK_USER, ...user, id: `usr_${Date.now()}` },
-    }),
+      isAuthenticated: false,
+      user: null,
+      credits: null,
+      matches: [],
+      currentOffer: null,
+    });
+  },
+
+  updateProfile: async (patch) => {
+    const { user } = await api.updateProfile(patch);
+    set({ user });
+  },
 
   credits: null,
   refreshCredits: async () => {
-    const credits = await getCredits();
-    set({ credits });
-  },
-  selectPlan: async (plan) => {
-    const credits = await upgradePlan(plan);
-    set({ credits });
-  },
-
-  isAnalyzing: false,
-  runCVAnalysis: async () => {
-    set({ isAnalyzing: true });
     try {
-      const { user } = get();
-      const analysis = await analyzeCV({
-        job: user?.job,
-        contract: user?.contract,
-        firstName: user?.firstName,
-      });
-      set((s) => ({
-        user: s.user ? { ...s.user, cvAnalysis: analysis } : s.user,
-        // Pre-select the suggested sectors so the machine is relevant out of the box.
-        selectedSectors: analysis.suggestedSectors,
-      }));
-      return analysis;
-    } finally {
-      set({ isAnalyzing: false });
+      set({ credits: await api.getCredits() });
+    } catch {
+      /* not authenticated yet — ignore */
     }
   },
+  selectPlan: async (plan) => {
+    set({ credits: await api.upgradePlan(plan) });
+  },
+
+  cvFile: null,
+  setCvFile: (file) => set({ cvFile: file }),
 
   selectedSectors: [],
   toggleSector: (sector) =>
@@ -104,50 +116,41 @@ export const useStore = create<AppState>((set, get) => ({
 
   currentOffer: null,
   loadNextOffer: async () => {
-    const offer = await getNextOffer(get().selectedSectors);
-    set({ currentOffer: offer });
+    try {
+      set({ currentOffer: await api.getNextOffer(get().selectedSectors) });
+    } catch {
+      set({ currentOffer: null });
+    }
   },
 
   matches: [],
+  loadMatches: async () => {
+    try {
+      set({ matches: await api.getMatches() });
+    } catch {
+      /* ignore */
+    }
+  },
 
   isProcessing: false,
 
   matchCurrent: async () => {
     const { currentOffer, isProcessing } = get();
     if (!currentOffer || isProcessing) return false;
-
     set({ isProcessing: true });
     try {
-      const consumed = await consumeCredit();
-      if (!consumed.success) {
+      const res = await api.sendMatch(currentOffer.id);
+      if (!res.success) {
+        if (res.credits) set({ credits: res.credits });
         return false;
       }
-
-      const result = await sendMatch(currentOffer.id);
-      const match: Match = {
-        id: `match_${Date.now()}`,
-        offer: currentOffer,
-        matchedAt: new Date().toISOString(),
-        emailStatus: result.emailSent ? 'sent' : 'pending',
-      };
-
       set((s) => ({
-        matches: [match, ...s.matches],
-        credits: s.credits
-          ? { ...s.credits, remaining: consumed.remaining }
-          : s.credits,
+        matches: res.match ? [res.match, ...s.matches] : s.matches,
+        credits: res.credits ?? s.credits,
       }));
-
-      // Simulate the email lifecycle (sent -> delivered -> opened).
-      window.setTimeout(() => {
-        set((s) => ({
-          matches: s.matches.map((m) =>
-            m.id === match.id ? { ...m, emailStatus: 'delivered' } : m,
-          ),
-        }));
-      }, 2200);
-
       return true;
+    } catch {
+      return false;
     } finally {
       set({ isProcessing: false });
     }

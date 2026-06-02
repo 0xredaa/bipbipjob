@@ -6,6 +6,7 @@ import { MapPinIcon, BriefcaseIcon, BoltIcon } from '@/components/icons';
 interface Props {
   offer: JobOffer | null;
   phase: MachinePhase;
+  onSelect?: () => void;
 }
 
 /**
@@ -14,7 +15,7 @@ interface Props {
  * still drive the same store actions) — it just renders the current offer as an
  * animated 2D parcel instead of a 3D one.
  */
-export function MachineFallback2D({ offer, phase }: Props) {
+export function MachineFallback2D({ offer, phase, onSelect }: Props) {
   const exitX = phase === 'matching' ? -420 : phase === 'skipping' ? 420 : 0;
   const exitRotate = phase === 'matching' ? -8 : phase === 'skipping' ? 16 : 0;
   const exitY = phase === 'skipping' ? 240 : 0;
@@ -36,7 +37,11 @@ export function MachineFallback2D({ offer, phase }: Props) {
             rotate: exitRotate,
           }}
           transition={{ type: 'spring', stiffness: 90, damping: 16 }}
-          className="relative w-[300px] -translate-y-6 rounded-3xl bg-carton p-1.5 shadow-2xl"
+          onClick={onSelect}
+          whileHover={onSelect ? { scale: 1.03 } : undefined}
+          className={`relative w-[300px] -translate-y-6 rounded-3xl bg-carton p-1.5 shadow-2xl ${
+            onSelect ? 'cursor-pointer' : ''
+          }`}
           style={{ boxShadow: '0 30px 60px rgba(0,0,0,0.5)' }}
         >
           {/* Tape */}

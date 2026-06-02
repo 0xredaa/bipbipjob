@@ -351,6 +351,65 @@ export const MOCK_OFFERS: JobOffer[] = [
   },
 ];
 
+// --- Offer missions (for the detail card) ------------------------------------
+
+const SECTOR_MISSIONS: Record<JobSector, string[]> = {
+  Tech: [
+    'Concevoir, développer et maintenir les fonctionnalités du produit',
+    'Garantir la qualité du code (tests, revues, CI/CD)',
+    "Collaborer avec les équipes produit et design en méthode agile",
+    'Participer aux choix d’architecture et à la veille technique',
+  ],
+  Finance: [
+    'Produire les analyses et reportings financiers périodiques',
+    'Construire et fiabiliser les modèles de prévision',
+    'Accompagner les décisions par des recommandations chiffrées',
+    'Veiller au respect des normes et procédures de contrôle',
+  ],
+  Logistique: [
+    'Piloter et optimiser les flux et les opérations quotidiennes',
+    'Encadrer et animer les équipes terrain',
+    'Suivre les indicateurs de performance (coûts, délais, qualité)',
+    'Garantir la sécurité et le respect des procédures',
+  ],
+  Design: [
+    'Concevoir des interfaces et parcours utilisateurs',
+    'Maintenir et faire évoluer le design system',
+    'Prototyper, tester et itérer avec les utilisateurs',
+    'Collaborer étroitement avec les équipes produit et dev',
+  ],
+  Marketing: [
+    'Définir et exécuter la stratégie d’acquisition',
+    'Piloter les campagnes multicanal et leur performance',
+    'Produire du contenu et optimiser le SEO/SEA',
+    'Analyser les KPIs et itérer via l’A/B testing',
+  ],
+  Commercial: [
+    'Prospecter et développer un portefeuille de clients',
+    'Mener le cycle de vente complet jusqu’au closing',
+    'Négocier les offres et contrats',
+    'Assurer le suivi CRM et le reporting commercial',
+  ],
+  Santé: [
+    'Assurer la prise en charge et le suivi des patients',
+    'Travailler en coordination avec l’équipe pluridisciplinaire',
+    'Respecter les protocoles de soins et d’hygiène',
+    'Participer à l’amélioration continue de la qualité des soins',
+  ],
+  RH: [
+    'Piloter les processus de recrutement de bout en bout',
+    'Accompagner l’onboarding et le développement des talents',
+    'Gérer l’administration du personnel et la paie',
+    'Contribuer à la marque employeur et à la culture interne',
+  ],
+};
+
+/** Returns the offer's explicit missions, or sensible sector-based defaults. */
+export function getOfferMissions(offer: JobOffer): string[] {
+  if (offer.missions && offer.missions.length) return offer.missions;
+  return SECTOR_MISSIONS[offer.sector];
+}
+
 // --- Mock CV analyzer --------------------------------------------------------
 
 const SKILL_POOL = [

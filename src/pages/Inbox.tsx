@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Layout } from '@/components/Layout';
@@ -34,8 +34,13 @@ function timeAgo(iso: string): string {
 
 export function InboxPage() {
   const matches = useStore((s) => s.matches);
+  const loadMatches = useStore((s) => s.loadMatches);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = matches.find((m) => m.id === selectedId) ?? null;
+
+  useEffect(() => {
+    void loadMatches();
+  }, [loadMatches]);
 
   return (
     <Layout>

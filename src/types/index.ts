@@ -22,6 +22,8 @@ export interface JobOffer {
   salary: string;
   tags: string[];
   description: string;
+  /** Optional explicit missions; otherwise derived from the sector. */
+  missions?: string[];
   companyEmail: string;
   logoColor: string;
 }
@@ -83,6 +85,8 @@ export interface User {
   job: string;
   location: string;
   bio: string;
+  linkedinUrl?: string;
+  /** Structured profile data imported from LinkedIn (experiences, skills…). */
   cvAnalysis?: CVAnalysis;
 }
 

@@ -13,6 +13,7 @@ interface MachineCanvasProps {
   actionId: number;
   actionType: MachineActionType;
   onExitComplete: () => void;
+  onSelectOffer?: () => void;
 }
 
 export function MachineCanvas(props: MachineCanvasProps) {

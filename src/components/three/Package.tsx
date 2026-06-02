@@ -11,6 +11,8 @@ interface PackageProps {
   phase: MachinePhase;
   /** Called once when an exit animation (match/skip) finishes. */
   onExitComplete: () => void;
+  /** Called when the user clicks the parcel (open the offer detail card). */
+  onSelect?: () => void;
 }
 
 const CENTER = new THREE.Vector3(0, 0.95, 0);
@@ -18,7 +20,7 @@ const SPAWN_X = 6.2; // off to the right
 const MATCH_X = -7; // slides off to the left
 const SKIP_X = 6.5; // slides right then falls
 
-export function Package({ offer, phase, onExitComplete }: PackageProps) {
+export function Package({ offer, phase, onExitComplete, onSelect }: PackageProps) {
   const group = useRef<THREE.Group>(null);
   const tape = useRef<THREE.Mesh>(null);
   const exitFired = useRef(false);
@@ -81,7 +83,20 @@ export function Package({ offer, phase, onExitComplete }: PackageProps) {
   });
 
   return (
-    <group ref={group} position={[SPAWN_X, CENTER.y, 0]}>
+    <group
+      ref={group}
+      position={[SPAWN_X, CENTER.y, 0]}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (phase === 'idle' || phase === 'incoming') onSelect?.();
+      }}
+      onPointerOver={() => {
+        if (onSelect) document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = 'auto';
+      }}
+    >
       {/* Cardboard body */}
       <RoundedBox args={[1.7, 1.5, 1.6]} radius={0.12} smoothness={4} castShadow receiveShadow>
         <meshStandardMaterial color="#C19A6B" roughness={0.85} metalness={0.05} />

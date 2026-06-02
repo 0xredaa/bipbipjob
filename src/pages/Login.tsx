@@ -3,23 +3,28 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useStore } from '@/store/useStore';
+import { LinkedInButton } from '@/components/LinkedInButton';
 import { Logo, BoltIcon, ArrowRightIcon } from '@/components/icons';
 
 export function LoginPage() {
   const login = useStore((s) => s.login);
   const navigate = useNavigate();
-  const [email, setEmail] = useState('reda.benali@example.com');
+  const [email, setEmail] = useState('demo@bip.com');
   const [password, setPassword] = useState('demo1234');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    window.setTimeout(() => {
-      login({ email });
+    try {
+      await login(email, password);
       toast.success('Connexion réussie');
       navigate('/machine');
-    }, 600);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Échec de la connexion');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,6 +32,10 @@ export function LoginPage() {
       title="Bon retour"
       subtitle="Connectez-vous pour relancer la machine."
     >
+      <LinkedInButton label="Continuer avec LinkedIn" />
+      <div className="my-5 flex items-center gap-3 text-xs text-white/30">
+        <span className="h-px flex-1 bg-white/10" /> ou <span className="h-px flex-1 bg-white/10" />
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="label" htmlFor="email">Email</label>

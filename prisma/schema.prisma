@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String? // null for OAuth-only accounts
+  linkedinSub  String?  @unique
+
+  firstName String  @default("")
+  lastName  String  @default("")
+  phone     String  @default("")
+  photoUrl  String  @default("")
+  cvFileName String @default("")
+  contract  String  @default("CDI")
+  job       String  @default("")
+  location  String  @default("")
+  bio       String  @default("")
+
+  // Imported/edited profile (experiences, skills…), stored as JSON.
+  profile Json?
+
+  // Credit wallet
+  plan           String   @default("free")
+  creditsRemaining Int    @default(10)
+  creditsTotal     Int    @default(10)
+  creditsResetAt   DateTime @default(now())
+
+  sessions  Session[]
+  matches   Match[]
+  feedbacks Feedback[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Offer {
+  id          String   @id @default(cuid())
+  title       String
+  company     String
+  location    String
+  contract    String
+  sector      String
+  salary      String
+  tags        String[]
+  description  String
+  missions    String[]
+  companyEmail String
+  logoColor   String
+
+  matches Match[]
+}
+
+model Match {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offerId     String
+  offer       Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  emailStatus String   @default("sent")
+  matchedAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  rating    Int
+  type      String
+  message   String
+  createdAt DateTime @default(now())
+}

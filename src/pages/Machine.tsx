@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Header } from '@/components/Header';
 import { SectorFilter } from '@/components/SectorFilter';
+import { OfferDetail } from '@/components/OfferDetail';
 import { SECTOR_COLOR } from '@/services/mockData';
 
 // Lazy-load the WebGL scene so the overlay UI shows instantly while it boots.
@@ -38,6 +39,8 @@ export function MachinePage() {
   useEffect(() => setWebgl(isWebGLAvailable()), []);
   // Lets the user dismiss the upgrade prompt and keep browsing offers.
   const [upgradeDismissed, setUpgradeDismissed] = useState(false);
+  // Offer detail card (opened by clicking the parcel).
+  const [showDetail, setShowDetail] = useState(false);
 
   const outOfCredits = credits?.remaining === 0;
   const showUpgrade = outOfCredits && !upgradeDismissed;
@@ -144,7 +147,13 @@ export function MachinePage() {
         {webgl ? (
           <CanvasErrorBoundary
             onError={() => setWebgl(false)}
-            fallback={<MachineFallback2D offer={currentOffer} phase={phase} />}
+            fallback={
+              <MachineFallback2D
+                offer={currentOffer}
+                phase={phase}
+                onSelect={() => setShowDetail(true)}
+              />
+            }
           >
             <Suspense
               fallback={
@@ -161,11 +170,16 @@ export function MachinePage() {
                 actionId={action.id}
                 actionType={action.type}
                 onExitComplete={handleExitComplete}
+                onSelectOffer={() => setShowDetail(true)}
               />
             </Suspense>
           </CanvasErrorBoundary>
         ) : (
-          <MachineFallback2D offer={currentOffer} phase={phase} />
+          <MachineFallback2D
+            offer={currentOffer}
+            phase={phase}
+            onSelect={() => setShowDetail(true)}
+          />
         )}
       </div>
 
@@ -173,18 +187,19 @@ export function MachinePage() {
       <div className="absolute left-1/2 top-24 z-20 flex -translate-x-1/2 flex-col items-center gap-2">
         <SectorFilter onChange={handleSectorsChange} />
         <p className="pointer-events-none text-xs uppercase tracking-[0.2em] text-white/30">
-          Glissez pour pivoter · ← passer · → matcher
+          Cliquez le colis pour la fiche · ← passer · → matcher
         </p>
       </div>
 
       {/* Bottom action bar */}
       <div className="absolute inset-x-0 bottom-0 z-30 flex flex-col items-center gap-4 pb-8">
         {currentOffer && (
-          <motion.div
+          <motion.button
             key={currentOffer.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass max-w-md rounded-2xl px-5 py-2.5 text-center"
+            onClick={() => setShowDetail(true)}
+            className="glass max-w-md rounded-2xl px-5 py-2.5 text-center transition hover:bg-white/10"
           >
             <div className="mb-0.5 flex items-center justify-center gap-2">
               <span
@@ -205,7 +220,10 @@ export function MachinePage() {
             <p className="text-xs text-white/50">
               {currentOffer.company} · {currentOffer.location} · {currentOffer.salary}
             </p>
-          </motion.div>
+            <p className="mt-0.5 text-[10px] uppercase tracking-wider text-ruban/70">
+              Voir la fiche →
+            </p>
+          </motion.button>
         )}
 
         <div className="flex items-center gap-5">
@@ -231,6 +249,18 @@ export function MachinePage() {
           </ActionButton>
         </div>
       </div>
+
+      {/* Offer detail card (opened by clicking the parcel) */}
+      <AnimatePresence>
+        {showDetail && currentOffer && (
+          <OfferDetail
+            offer={currentOffer}
+            onClose={() => setShowDetail(false)}
+            canMatch={!outOfCredits}
+            onMatch={handleMatch}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Out-of-credits overlay */}
       <AnimatePresence>

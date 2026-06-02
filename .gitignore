@@ -7,3 +7,11 @@ dist-ssr
 !.vscode/extensions.json
 *.log
 npm-debug.log*
+
+# Emitted from vite.config.ts by tsc -b
+vite.config.js
+vite.config.d.ts
+
+# Secrets / env
+.env
+server/.env

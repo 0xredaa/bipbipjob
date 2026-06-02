@@ -1,0 +1,342 @@
+[
+  {
+    "title": "Senior Frontend Engineer",
+    "company": "Nebula Labs",
+    "location": "Paris, France",
+    "contract": "CDI",
+    "sector": "Tech",
+    "salary": "65–80k €",
+    "tags": [
+      "React",
+      "Three.js",
+      "TypeScript"
+    ],
+    "description": "Construisez des interfaces 3D immersives pour notre plateforme analytics. Stack moderne, équipe produit forte.",
+    "missions": [],
+    "companyEmail": "jobs@nebulalabs.io",
+    "logoColor": "#6366F1"
+  },
+  {
+    "title": "Backend Engineer (Go)",
+    "company": "Cargologic",
+    "location": "Remote",
+    "contract": "Freelance",
+    "sector": "Tech",
+    "salary": "550 €/jour",
+    "tags": [
+      "Go",
+      "Kubernetes",
+      "gRPC"
+    ],
+    "description": "Scalez notre moteur logistique temps réel. Millions de requêtes par jour.",
+    "missions": [],
+    "companyEmail": "hello@cargologic.com",
+    "logoColor": "#10B981"
+  },
+  {
+    "title": "DevOps Engineer",
+    "company": "Stackhouse",
+    "location": "Nantes, France",
+    "contract": "CDI",
+    "sector": "Tech",
+    "salary": "52–68k €",
+    "tags": [
+      "AWS",
+      "Terraform",
+      "CI/CD"
+    ],
+    "description": "Industrialisez nos déploiements multi-cloud. Culture SRE, on-call léger.",
+    "missions": [],
+    "companyEmail": "recrutement@stackhouse.fr",
+    "logoColor": "#8B5CF6"
+  },
+  {
+    "title": "Data Engineer",
+    "company": "Quanta",
+    "location": "Toulouse, France",
+    "contract": "CDI",
+    "sector": "Tech",
+    "salary": "54–70k €",
+    "tags": [
+      "Python",
+      "Spark",
+      "dbt"
+    ],
+    "description": "Bâtissez la plateforme data qui alimente nos modèles ML en production.",
+    "missions": [],
+    "companyEmail": "jobs@quanta.ai",
+    "logoColor": "#14B8A6"
+  },
+  {
+    "title": "Analyste Financier",
+    "company": "Meridian Capital",
+    "location": "Paris, France",
+    "contract": "CDI",
+    "sector": "Finance",
+    "salary": "55–70k €",
+    "tags": [
+      "Excel",
+      "Modélisation",
+      "M&A"
+    ],
+    "description": "Analyse de portefeuilles et opérations M&A pour un fonds de premier plan.",
+    "missions": [],
+    "companyEmail": "careers@meridiancap.com",
+    "logoColor": "#10B981"
+  },
+  {
+    "title": "Contrôleur de Gestion",
+    "company": "Lumen Group",
+    "location": "Lyon, France",
+    "contract": "CDI",
+    "sector": "Finance",
+    "salary": "45–58k €",
+    "tags": [
+      "Reporting",
+      "SAP",
+      "Budget"
+    ],
+    "description": "Pilotez la performance financière de 3 business units en forte croissance.",
+    "missions": [],
+    "companyEmail": "rh@lumengroup.fr",
+    "logoColor": "#059669"
+  },
+  {
+    "title": "Stage Audit Financier",
+    "company": "Deloitte",
+    "location": "Paris, France",
+    "contract": "Stage",
+    "sector": "Finance",
+    "salary": "1 400 €/mois",
+    "tags": [
+      "Audit",
+      "IFRS",
+      "Excel"
+    ],
+    "description": "Stage de 6 mois en audit, missions clients grands comptes.",
+    "missions": [],
+    "companyEmail": "stages@deloitte.fr",
+    "logoColor": "#22C55E"
+  },
+  {
+    "title": "Responsable Supply Chain",
+    "company": "TransGlobe",
+    "location": "Le Havre, France",
+    "contract": "CDI",
+    "sector": "Logistique",
+    "salary": "50–65k €",
+    "tags": [
+      "Supply Chain",
+      "ERP",
+      "Lean"
+    ],
+    "description": "Optimisez les flux d'un réseau de 12 entrepôts en Europe.",
+    "missions": [],
+    "companyEmail": "jobs@transglobe.com",
+    "logoColor": "#F59E0B"
+  },
+  {
+    "title": "Chef d'Équipe Entrepôt",
+    "company": "Cargologic",
+    "location": "Lille, France",
+    "contract": "CDI",
+    "sector": "Logistique",
+    "salary": "34–42k €",
+    "tags": [
+      "Management",
+      "WMS",
+      "Sécurité"
+    ],
+    "description": "Encadrez une équipe de 25 opérateurs sur un site automatisé.",
+    "missions": [],
+    "companyEmail": "recrut@cargologic.com",
+    "logoColor": "#D97706"
+  },
+  {
+    "title": "Coordinateur Transport",
+    "company": "FretExpress",
+    "location": "Marseille, France",
+    "contract": "CDD",
+    "sector": "Logistique",
+    "salary": "32–38k €",
+    "tags": [
+      "Transport",
+      "Planning",
+      "Douane"
+    ],
+    "description": "Coordination des expéditions internationales, maritime et routier.",
+    "missions": [],
+    "companyEmail": "rh@fretexpress.fr",
+    "logoColor": "#FB923C"
+  },
+  {
+    "title": "Lead Product Designer",
+    "company": "Orbit",
+    "location": "Lyon, France",
+    "contract": "CDI",
+    "sector": "Design",
+    "salary": "55–70k €",
+    "tags": [
+      "Figma",
+      "Design System",
+      "Motion"
+    ],
+    "description": "Pilotez le design d'un produit B2B utilisé par 50 000 entreprises.",
+    "missions": [],
+    "companyEmail": "talent@orbit.design",
+    "logoColor": "#EC4899"
+  },
+  {
+    "title": "WebGL / 3D Designer",
+    "company": "Pixelforge",
+    "location": "Bordeaux, France",
+    "contract": "CDD",
+    "sector": "Design",
+    "salary": "48–58k €",
+    "tags": [
+      "Blender",
+      "Shaders",
+      "R3F"
+    ],
+    "description": "Créez des expériences 3D primées pour des marques de luxe.",
+    "missions": [],
+    "companyEmail": "careers@pixelforge.studio",
+    "logoColor": "#F472B6"
+  },
+  {
+    "title": "Growth Marketing Manager",
+    "company": "Loopr",
+    "location": "Remote",
+    "contract": "CDI",
+    "sector": "Marketing",
+    "salary": "50–64k €",
+    "tags": [
+      "Growth",
+      "SEO",
+      "A/B"
+    ],
+    "description": "Possédez la boucle d'acquisition de notre SaaS en hyper-croissance.",
+    "missions": [],
+    "companyEmail": "jobs@loopr.app",
+    "logoColor": "#06B6D4"
+  },
+  {
+    "title": "Content Manager",
+    "company": "Brandwave",
+    "location": "Paris, France",
+    "contract": "Alternance",
+    "sector": "Marketing",
+    "salary": "1 200 €/mois",
+    "tags": [
+      "Content",
+      "Social",
+      "Copywriting"
+    ],
+    "description": "Alternance : pilotez le contenu social d'une marque lifestyle.",
+    "missions": [],
+    "companyEmail": "alternance@brandwave.fr",
+    "logoColor": "#22D3EE"
+  },
+  {
+    "title": "Account Executive",
+    "company": "Salesly",
+    "location": "Paris, France",
+    "contract": "CDI",
+    "sector": "Commercial",
+    "salary": "40k € + variable",
+    "tags": [
+      "SaaS",
+      "Closing",
+      "CRM"
+    ],
+    "description": "Cycle de vente complet sur des comptes mid-market. Variable déplafonné.",
+    "missions": [],
+    "companyEmail": "jobs@salesly.io",
+    "logoColor": "#EF4444"
+  },
+  {
+    "title": "Business Developer",
+    "company": "Nexa",
+    "location": "Lille, France",
+    "contract": "CDI",
+    "sector": "Commercial",
+    "salary": "35k € + variable",
+    "tags": [
+      "Prospection",
+      "B2B",
+      "Hunting"
+    ],
+    "description": "Ouvrez de nouveaux marchés pour une scale-up industrielle.",
+    "missions": [],
+    "companyEmail": "rh@nexa.fr",
+    "logoColor": "#F87171"
+  },
+  {
+    "title": "Infirmier·ère DE",
+    "company": "Clinique du Parc",
+    "location": "Lyon, France",
+    "contract": "CDI",
+    "sector": "Santé",
+    "salary": "32–40k €",
+    "tags": [
+      "Soins",
+      "Bloc",
+      "Urgences"
+    ],
+    "description": "Rejoignez un service de pointe, équipe bienveillante, planning stable.",
+    "missions": [],
+    "companyEmail": "rh@cliniqueduparc.fr",
+    "logoColor": "#14B8A6"
+  },
+  {
+    "title": "Ingénieur Biomédical",
+    "company": "MedTechOne",
+    "location": "Grenoble, France",
+    "contract": "CDI",
+    "sector": "Santé",
+    "salary": "42–55k €",
+    "tags": [
+      "Dispositifs",
+      "R&D",
+      "ISO 13485"
+    ],
+    "description": "Conception de dispositifs médicaux innovants, de la R&D au marquage CE.",
+    "missions": [],
+    "companyEmail": "jobs@medtechone.com",
+    "logoColor": "#2DD4BF"
+  },
+  {
+    "title": "Talent Acquisition Manager",
+    "company": "PeopleFirst",
+    "location": "Remote",
+    "contract": "CDI",
+    "sector": "RH",
+    "salary": "45–58k €",
+    "tags": [
+      "Recrutement",
+      "Sourcing",
+      "ATS"
+    ],
+    "description": "Structurez le recrutement tech d'une entreprise qui double chaque année.",
+    "missions": [],
+    "companyEmail": "jobs@peoplefirst.io",
+    "logoColor": "#8B5CF6"
+  },
+  {
+    "title": "Chargé·e RH (alternance)",
+    "company": "Lumen Group",
+    "location": "Lyon, France",
+    "contract": "Alternance",
+    "sector": "RH",
+    "salary": "1 100 €/mois",
+    "tags": [
+      "Paie",
+      "Onboarding",
+      "SIRH"
+    ],
+    "description": "Alternance généraliste RH au sein d'une équipe de 6 personnes.",
+    "missions": [],
+    "companyEmail": "alternance@lumengroup.fr",
+    "logoColor": "#A78BFA"
+  }
+]
