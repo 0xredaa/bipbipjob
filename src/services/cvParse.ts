@@ -41,7 +41,10 @@ const SECTOR_KEYWORDS: Record<JobSector, string[]> = {
   RH: ['ressources humaines', 'recrut', 'talent', 'paie', 'sirh', 'rh ', 'onboarding'],
 };
 
-const MONTHS = 'jan|fév|fev|mar|avr|mai|juin|juil|aoû|aou|sep|oct|nov|déc|dec|janvier|février|mars|avril|juin|juillet|août|septembre|octobre|novembre|décembre';
+const MONTHS =
+  'janvier|février|mars|avril|juillet|juin|mai|août|septembre|octobre|novembre|décembre|' +
+  'january|february|march|april|june|july|august|september|october|november|december|' +
+  'jan|fév|fev|feb|mar|avr|apr|jun|jul|aoû|aou|aug|sept|sep|oct|nov|déc|dec';
 const YEAR = '(?:19|20)\\d{2}';
 const PRESENT = "(?:présent|present|aujourd['’]?hui|aujourdhui|actuel(?:le)?|now|en cours)";
 const DATE_RANGE = new RegExp(
@@ -49,6 +52,27 @@ const DATE_RANGE = new RegExp(
   'i',
 );
 const SINGLE_YEAR = new RegExp(`\\b${YEAR}\\b`);
+// A leftover "header" that is only a month (e.g. "May") means the real title is
+// on the line above — used to look past a bare date line.
+const MONTH_ONLY = new RegExp(`^(?:${MONTHS})\\.?$`, 'i');
+// "Mai - juillet 2024" style ranges where only the end carries the year.
+const MONTH_RANGE = new RegExp(
+  `((?:${MONTHS})\\.?)\\s*[-–—à]+\\s*((?:${MONTHS})\\.?\\s*${YEAR}|${PRESENT})`,
+  'i',
+);
+
+// U+0002 marks bold/emphasised lines (set by the PDF extractor in cvParser.ts).
+const STRONG = String.fromCharCode(2);
+const BULLET_RE = /^\s*[•·▪◦‣●○*+‐-―-]\s+/;
+const EXP_SECTION = /^(exp[ée]riences?|parcours|emplois?|work experience|professional experience)\b/i;
+const EDU_SECTION = /^(formations?|[ée]ducation|education|dipl[ôo]mes?|scolarit[ée]|studies)\b/i;
+const OTHER_SECTION =
+  /^(comp[ée]tences|skills|langues|languages|centres?\s+d|projets?|projects|certifications?|int[ée]r[êe]ts|loisirs|hobbies|contact|profil|summary|r[ée]f[ée]rences?)\b/i;
+
+interface Line {
+  text: string;
+  strong: boolean;
+}
 
 const EDUCATION_KEYWORDS =
   /\b(master|licence|bachelor|bts|dut|but|mba|doctorat|phd|ingénieur|ing\.|diplôme|baccalauréat|\bbac\b|université|universit|école|ecole|faculté|formation|msc|bsc)\b/i;
@@ -109,29 +133,100 @@ function splitRoleCompany(s: string): { role: string; company: string } {
   return { role: s.trim(), company: '' };
 }
 
-function extractExperiences(lines: string[]): CVExperience[] {
+const isSectionHeader = (t: string) =>
+  t.length <= 40 && (EXP_SECTION.test(t) || EDU_SECTION.test(t) || OTHER_SECTION.test(t));
+
+/**
+ * Extracts experiences from emphasis-aware lines. Each entry is anchored on a
+ * date range; the role/company come from the bold header line (the company is
+ * the emphasised token), and the description is built from the bullet points /
+ * lines underneath it — exactly the visual structure of a CV.
+ */
+function extractExperiences(rawLines: Line[]): CVExperience[] {
   const experiences: CVExperience[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const m = line.match(DATE_RANGE);
+  const n = rawLines.length;
+  let section: 'exp' | 'edu' | 'other' | 'unknown' = 'unknown';
+
+  const headerish = (l?: Line) =>
+    !!l && l.strong && !BULLET_RE.test(l.text) && !DATE_RANGE.test(l.text) && l.text.length <= 70;
+
+  for (let i = 0; i < n; i++) {
+    const text = rawLines[i].text;
+
+    // Track the current CV section so education isn't parsed as experience.
+    if (isSectionHeader(text)) {
+      section = EXP_SECTION.test(text) ? 'exp' : EDU_SECTION.test(text) ? 'edu' : 'other';
+      continue;
+    }
+    if (section === 'edu') continue;
+
+    const isDateLine = !BULLET_RE.test(text) && text.length < 70;
+    const m = text.match(DATE_RANGE) || (isDateLine ? text.match(MONTH_RANGE) : null);
     if (!m) continue;
 
     const period = `${m[1].trim()} — ${m[2].trim()}`;
-    let header = line.replace(DATE_RANGE, '').replace(/[|·•–—-]\s*$/, '').trim();
-    if (header.length < 3) header = (lines[i - 1] ?? lines[i + 1] ?? '').trim();
 
-    const context = [lines[i - 1], line, lines[i + 1]].filter(Boolean).join(' ');
-    const { role, company } = splitRoleCompany(header);
-    const description = lines[i + 1] && !DATE_RANGE.test(lines[i + 1]) ? lines[i + 1].slice(0, 160) : '';
+    // Header (role/company): the date line minus the date, else the nearest
+    // non-bullet line just above (the common "Title \n Dates \n • …" layout).
+    let header = text.replace(m[0], '').replace(/[|·•–—-]\s*$/, '').trim();
+    let headerIdx = i;
+    if (header.length < 3 || MONTH_ONLY.test(header)) {
+      for (let j = i - 1; j >= Math.max(0, i - 2); j--) {
+        const c = rawLines[j].text;
+        if (c && !BULLET_RE.test(c) && !DATE_RANGE.test(c) && !isSectionHeader(c)) {
+          header = c;
+          headerIdx = j;
+          break;
+        }
+      }
+    }
 
-    if (!role || EDUCATION_KEYWORDS.test(context)) continue;
+    const context = [rawLines[headerIdx]?.text, rawLines[i - 1]?.text, text, rawLines[i + 1]?.text]
+      .filter(Boolean)
+      .join(' ');
+    if (EDUCATION_KEYWORDS.test(header)) continue;
+    if (section !== 'exp' && EDUCATION_KEYWORDS.test(context)) continue;
+
+    let { role, company } = splitRoleCompany(header);
+
+    // No "Role - Company" separator: the company is the bold neighbour line.
+    if (!company) {
+      for (const j of [headerIdx - 1, headerIdx + 1, i + 1]) {
+        const c = rawLines[j];
+        if (
+          c &&
+          c.strong &&
+          c.text !== header &&
+          !BULLET_RE.test(c.text) &&
+          !DATE_RANGE.test(c.text) &&
+          c.text.length <= 60
+        ) {
+          company = c.text;
+          break;
+        }
+      }
+    }
+
+    // Description: bullet points / lines under the entry, until the next entry
+    // header, a new date, or a section change.
+    const desc: string[] = [];
+    for (let j = i + 1; j < n && desc.length < 6; j++) {
+      const c = rawLines[j];
+      if (DATE_RANGE.test(c.text) || MONTH_RANGE.test(c.text)) break;
+      if (isSectionHeader(c.text)) break;
+      if (headerish(c) && desc.length > 0) break;
+      const bullet = c.text.replace(BULLET_RE, '').trim();
+      if (BULLET_RE.test(c.text) || bullet.length >= 15) desc.push(bullet);
+    }
+
+    if (!role) continue;
 
     experiences.push({
       role: role.slice(0, 80),
-      company: company.slice(0, 80) || '—',
+      company: (company || '—').slice(0, 80),
       period,
-      type: classifyType(context),
-      description: description || 'Expérience extraite de votre document.',
+      type: classifyType(`${context} ${desc.join(' ')}`),
+      description: desc.join(' • ').slice(0, 400) || 'Expérience extraite de votre document.',
     });
     if (experiences.length >= 8) break;
   }
@@ -181,13 +276,18 @@ function computeYears(experiences: CVExperience[], text: string): number {
  */
 export function parseCVText(text: string, fallback: { job?: string }): CVAnalysis {
   const cleaned = text.replace(/ /g, ' ');
-  const lines = cleaned
+  const rawLines: Line[] = text
     .split('\n')
-    .map((l) => l.replace(/\s+/g, ' ').trim())
-    .filter(Boolean);
+    .map((l) => ({
+      strong: l.startsWith(STRONG),
+      text: l.replace(new RegExp(STRONG, 'g'), '').replace(/\s+/g, ' ').trim(),
+    }))
+    .filter((l) => l.text.length > 0);
+
+  const lines = rawLines.map((l) => l.text);
 
   const skills = detectSkills(cleaned);
-  const experiences = extractExperiences(lines);
+  const experiences = extractExperiences(rawLines);
   const education = extractEducation(lines);
   let suggestedSectors = detectSectors(cleaned);
   if (suggestedSectors.length === 0) suggestedSectors = ['Tech'];

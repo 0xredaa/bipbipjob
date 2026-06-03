@@ -23,7 +23,44 @@ interface Item {
   y: number;
   w: number;
   size: number;
+  bold: boolean;
   str: string;
+}
+
+interface LineMeta {
+  text: string;
+  size: number;
+  bold: boolean;
+}
+
+type StyleMap = Record<string, { fontFamily?: string } | undefined>;
+
+// A bold/emphasised line is wrapped with this control char so the pure text
+// parser (cvParse.ts) can tell which lines are visually emphasised (company
+// names, job titles…) — information that is otherwise lost in plain text.
+const STRONG = '';
+
+function isBoldFont(fontName: string, styles: StyleMap): boolean {
+  const fam = styles[fontName]?.fontFamily ?? '';
+  return /bold|black|heavy|semibold|demibold|extrabold|w[5-9]00/i.test(fam);
+}
+
+/** Most frequent (rounded) glyph size on the page — i.e. the body text size. */
+function bodyFontSize(items: Item[]): number {
+  const counts = new Map<number, number>();
+  for (const it of items) {
+    const k = Math.round(it.size);
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  let best = 10;
+  let bestCount = 0;
+  for (const [k, c] of counts) {
+    if (c > bestCount) {
+      bestCount = c;
+      best = k;
+    }
+  }
+  return best;
 }
 
 /**
@@ -41,6 +78,7 @@ async function extractPdf(file: File): Promise<string> {
     const width = page.getViewport({ scale: 1 }).width;
     const content = await page.getTextContent();
 
+    const styles = content.styles as StyleMap;
     const items: Item[] = [];
     for (const it of content.items) {
       if (!('str' in it) || !it.str.trim()) continue;
@@ -49,18 +87,28 @@ async function extractPdf(file: File): Promise<string> {
         y: it.transform[5],
         w: it.width ?? 0,
         size: Math.abs(it.transform[0]) || 10,
+        bold: isBoldFont(it.fontName, styles),
         str: it.str,
       });
     }
     if (!items.length) continue;
 
+    const bodySize = bodyFontSize(items);
+    // A line stands out (company name / job title) when it is bold or clearly
+    // larger than the body text — mark those so cvParse can use the emphasis.
+    const emit = (metas: LineMeta[]) =>
+      metas.forEach((m) =>
+        out.push(m.bold || m.size >= bodySize * 1.12 ? STRONG + m.text : m.text),
+      );
+
     const split = detectColumnSplit(items, width);
     if (split == null) {
-      out.push(...buildLines(items));
+      emit(buildLines(items));
     } else {
       const left = items.filter((it) => it.x + it.w / 2 < split);
       const right = items.filter((it) => it.x + it.w / 2 >= split);
-      out.push(...buildLines(left), ...buildLines(right));
+      emit(buildLines(left));
+      emit(buildLines(right));
     }
   }
   return out.join('\n');
@@ -102,7 +150,7 @@ function detectColumnSplit(items: Item[], width: number): number | null {
 }
 
 /** Rebuilds visual lines from items, joining glyphs without spurious spaces. */
-function buildLines(items: Item[]): string[] {
+function buildLines(items: Item[]): LineMeta[] {
   const rows = new Map<number, Item[]>();
   for (const it of items) {
     const y = Math.round(it.y / 2) * 2;
@@ -110,11 +158,14 @@ function buildLines(items: Item[]): string[] {
     rows.get(y)!.push(it);
   }
   const ys = [...rows.keys()].sort((a, b) => b - a); // top → bottom
-  const lines: string[] = [];
+  const lines: LineMeta[] = [];
   for (const y of ys) {
     const row = rows.get(y)!.sort((a, b) => a.x - b.x);
     let line = '';
     let prevEnd: number | null = null;
+    let maxSize = 0;
+    let boldW = 0;
+    let totalW = 0;
     for (const it of row) {
       if (prevEnd != null) {
         const gap = it.x - prevEnd;
@@ -123,9 +174,13 @@ function buildLines(items: Item[]): string[] {
       }
       line += it.str;
       prevEnd = it.x + it.w;
+      maxSize = Math.max(maxSize, it.size);
+      totalW += it.w;
+      if (it.bold) boldW += it.w;
     }
     const cleaned = line.replace(/\s+/g, ' ').trim();
-    if (cleaned) lines.push(cleaned);
+    // The line counts as bold when most of its width is bold glyphs.
+    if (cleaned) lines.push({ text: cleaned, size: maxSize, bold: totalW > 0 && boldW / totalW > 0.55 });
   }
   return lines;
 }
