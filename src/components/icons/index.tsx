@@ -238,3 +238,32 @@ export function LockIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function InstagramIcon(props: IconProps) {
+  return (
+    <svg
+      width={24}
+      height={24}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17.2" cy="6.8" r="1.15" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** X (formerly Twitter) — the current brand glyph. */
+export function XIcon(props: IconProps) {
+  return (
+    <svg width={24} height={24} viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231L18.244 2.25Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
+    </svg>
+  );
+}

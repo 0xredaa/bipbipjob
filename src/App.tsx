@@ -12,6 +12,9 @@ import { PlansPage } from '@/pages/Plans';
 import { CheckoutPage } from '@/pages/Checkout';
 import { LinkedInCallbackPage } from '@/pages/LinkedInCallback';
 import { ProfilePage } from '@/pages/Profile';
+import { AboutPage } from '@/pages/About';
+import { ContactPage } from '@/pages/Contact';
+import { LegalPage } from '@/pages/Legal';
 import { Logo } from '@/components/icons';
 import { Background3D } from '@/components/three/Background3D';
 
@@ -68,6 +71,9 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/linkedin" element={<LinkedInCallbackPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/legal" element={<LegalPage />} />
 
         {/* Authenticated */}
         <Route path="/machine" element={<RequireAuth><MachinePage /></RequireAuth>} />

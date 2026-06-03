@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { CheckIcon, SparkleIcon, ArrowRightIcon, CrownIcon } from '@/components/icons';
 import { PLANS } from '@/data/plans';
 
@@ -136,9 +137,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <footer className="border-t border-white/5 py-8 text-center text-sm text-white/30">
-        BipBipJob — Faites bip-bip, trouvez votre job. © 2026
-      </footer>
+      <Footer />
     </div>
   );
 }
