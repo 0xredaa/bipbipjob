@@ -7,7 +7,7 @@ import { Header } from './Header';
  */
 export function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-grid">
+    <div className="min-h-screen">
       <Header />
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-28 sm:pt-32">{children}</main>
     </div>

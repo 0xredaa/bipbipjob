@@ -13,6 +13,7 @@ import { CheckoutPage } from '@/pages/Checkout';
 import { LinkedInCallbackPage } from '@/pages/LinkedInCallback';
 import { ProfilePage } from '@/pages/Profile';
 import { Logo } from '@/components/icons';
+import { Background3D } from '@/components/three/Background3D';
 
 /** Gate that waits for hydration, then redirects unauthenticated users to /login. */
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -27,7 +28,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 function Splash() {
   return (
-    <div className="grid min-h-screen place-items-center bg-grid">
+    <div className="grid min-h-screen place-items-center">
       <div className="flex items-center gap-2.5 opacity-80">
         <Logo className="h-8 w-8 animate-pulse" />
         <span className="font-display text-lg font-bold">
@@ -46,6 +47,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <Background3D />
       <Toaster
         position="top-center"
         toastOptions={{

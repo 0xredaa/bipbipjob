@@ -1,15 +1,8 @@
-import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Logo, CheckIcon, SparkleIcon, ArrowRightIcon, CrownIcon } from '@/components/icons';
-import { CanvasErrorBoundary } from '@/components/three/CanvasErrorBoundary';
+import { CheckIcon, SparkleIcon, ArrowRightIcon, CrownIcon } from '@/components/icons';
 import { PLANS } from '@/data/plans';
-
-// Code-split the Three.js hero so the landing markup paints before WebGL loads.
-const HeroMachine = lazy(() =>
-  import('@/components/three/HeroMachine').then((m) => ({ default: m.HeroMachine })),
-);
 
 const STEPS = [
   { n: '01', title: 'Les offres défilent', text: 'Chaque offre arrive comme un colis sur le tapis roulant 3D.' },
@@ -17,30 +10,13 @@ const STEPS = [
   { n: '03', title: "L'email part tout seul", text: "On envoie votre CV à l'entreprise automatiquement. Suivez le statut dans l'Inbox." },
 ];
 
-/** Static stand-in for the 3D hero when WebGL can't initialise. */
-function HeroFallback() {
-  return (
-    <div className="grid h-full place-items-center">
-      <motion.div
-        initial={{ scale: 0.85, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="relative grid h-44 w-44 place-items-center rounded-[2rem] bg-carton shadow-2xl"
-        style={{ boxShadow: '0 30px 60px rgba(0,0,0,0.5)' }}
-      >
-        <div className="absolute inset-x-0 top-1/2 h-9 -translate-y-1/2 bg-ruban/90" />
-        <Logo className="relative h-20 w-20" />
-      </motion.div>
-    </div>
-  );
-}
-
 export function HomePage() {
   return (
-    <div className="min-h-screen bg-grid">
+    <div className="min-h-screen">
       <Header variant="landing" />
 
       {/* Hero */}
-      <section className="relative mx-auto grid max-w-6xl items-center gap-8 px-4 pt-28 sm:pt-36 lg:grid-cols-2 lg:gap-4">
+      <section className="relative mx-auto max-w-6xl px-4 pt-28 pb-12 sm:pt-40">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -80,17 +56,6 @@ export function HomePage() {
             <span><strong className="text-white">98%</strong> emails délivrés</span>
           </div>
         </motion.div>
-
-        {/* 3D hero (degrades to a static parcel badge if WebGL is missing) */}
-        <div className="relative h-[360px] sm:h-[460px] lg:h-[560px]">
-          <div className="absolute inset-0">
-            <CanvasErrorBoundary fallback={<HeroFallback />}>
-              <Suspense fallback={<div className="grid h-full place-items-center text-white/30">Chargement 3D…</div>}>
-                <HeroMachine />
-              </Suspense>
-            </CanvasErrorBoundary>
-          </div>
-        </div>
       </section>
 
       {/* How it works */}
