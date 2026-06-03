@@ -87,8 +87,9 @@ export function ProfilePage() {
           : 'Document analysé (peu d’expériences détectées)',
         { id: toastId, icon: '✅' },
       );
-    } catch {
-      toast.error("Échec de l'analyse — le PDF doit contenir du texte", { id: toastId });
+    } catch (err) {
+      console.error('[CV import] échec de l’analyse :', err);
+      toast.error("Échec de l'analyse — réessayez (le PDF doit contenir du texte)", { id: toastId });
     } finally {
       setImporting(false);
     }

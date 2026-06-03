@@ -40,7 +40,8 @@ type StyleMap = Record<string, { fontFamily?: string } | undefined>;
 // names, job titles…) — information that is otherwise lost in plain text.
 const STRONG = '';
 
-function isBoldFont(fontName: string, styles: StyleMap): boolean {
+function isBoldFont(fontName: string | undefined, styles: StyleMap | undefined): boolean {
+  if (!fontName || !styles) return false;
   const fam = styles[fontName]?.fontFamily ?? '';
   return /bold|black|heavy|semibold|demibold|extrabold|w[5-9]00/i.test(fam);
 }
@@ -74,6 +75,7 @@ async function extractPdf(file: File): Promise<string> {
   const out: string[] = [];
 
   for (let p = 1; p <= pdf.numPages; p++) {
+    try {
     const page = await pdf.getPage(p);
     const width = page.getViewport({ scale: 1 }).width;
     const content = await page.getTextContent();
@@ -109,6 +111,10 @@ async function extractPdf(file: File): Promise<string> {
       const right = items.filter((it) => it.x + it.w / 2 >= split);
       emit(buildLines(left));
       emit(buildLines(right));
+    }
+    } catch (e) {
+      // A single malformed page shouldn't fail the whole import.
+      console.warn('[CV] page', p, 'ignorée :', e);
     }
   }
   return out.join('\n');

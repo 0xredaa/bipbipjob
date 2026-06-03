@@ -287,7 +287,12 @@ export function parseCVText(text: string, fallback: { job?: string }): CVAnalysi
   const lines = rawLines.map((l) => l.text);
 
   const skills = detectSkills(cleaned);
-  const experiences = extractExperiences(rawLines);
+  let experiences: CVExperience[] = [];
+  try {
+    experiences = extractExperiences(rawLines);
+  } catch {
+    experiences = []; // never let experience parsing break the whole import
+  }
   const education = extractEducation(lines);
   let suggestedSectors = detectSectors(cleaned);
   if (suggestedSectors.length === 0) suggestedSectors = ['Tech'];

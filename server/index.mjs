@@ -421,6 +421,9 @@ app.get('/api/matches', requireAuth, async (req, res) => {
 app.post('/api/plan', requireAuth, async (req, res) => {
   const plan = req.body?.plan;
   if (!PLAN_TOTALS[plan]) return res.status(400).json({ error: 'Plan invalide.' });
+  // Re-selecting the plan you're already on must NOT refill credits — otherwise
+  // a free user could top up by re-picking "Free" from the plans page.
+  if (plan === req.user.plan) return res.json(await walletOf(req.user));
   const total = PLAN_TOTALS[plan];
   const user = await prisma.user.update({
     where: { id: req.user.id },

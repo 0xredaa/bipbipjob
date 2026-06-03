@@ -15,6 +15,7 @@ import { Logo, CheckIcon, CrownIcon, BoltIcon } from '@/components/icons';
 export function PlansPage() {
   const selectPlan = useStore((s) => s.selectPlan);
   const user = useStore((s) => s.user);
+  const credits = useStore((s) => s.credits);
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const isUpgrade = params.get('upgrade') === '1';
@@ -27,7 +28,12 @@ export function PlansPage() {
       navigate(`/checkout?plan=${plan}`);
       return;
     }
-    // Free is provisioned immediately.
+    // Already on Free → just continue; don't re-provision (would refill credits).
+    if (credits?.plan === 'free') {
+      navigate('/machine');
+      return;
+    }
+    // Free is provisioned immediately (e.g. when downgrading from a paid plan).
     setLoading(plan);
     await selectPlan(plan);
     toast.success('Plan Free activé — c\'est parti !', { icon: '⚡' });
