@@ -6,6 +6,7 @@ import { CanvasErrorBoundary } from './CanvasErrorBoundary';
 import { ConveyorBelt } from './ConveyorBelt';
 import { Structure } from './Structure';
 import { NeonLights } from './NeonLights';
+import { useTheme } from '@/theme';
 
 /**
  * Full-viewport interactive 3D background telling the product story: a self-
@@ -217,6 +218,14 @@ function FactoryRig({ pointer }: { pointer: Pointer }) {
 
 export function Background3D() {
   const pointer = usePointer();
+  const { resolved } = useTheme();
+  const dark = resolved === 'dark';
+
+  const base = dark ? '#0b0f17' : '#eef2f7';
+  const veil = dark
+    ? 'radial-gradient(125% 125% at 50% 40%, rgba(11,15,23,0.55) 0%, rgba(11,15,23,0.8) 100%)'
+    : 'radial-gradient(125% 125% at 50% 40%, rgba(238,242,247,0.5) 0%, rgba(238,242,247,0.82) 100%)';
+
   return (
     <div
       aria-hidden
@@ -232,11 +241,11 @@ export function Background3D() {
             camera={{ position: [7.5, 4.4, 9.5], fov: 40 }}
             gl={{ antialias: true, alpha: false }}
           >
-            <color attach="background" args={['#0b0f17']} />
-            <fog attach="fog" args={['#0b0f17', 13, 28]} />
-            <ambientLight intensity={0.45} />
-            <hemisphereLight args={['#cfd6e4', '#1a1f2b', 0.5]} />
-            <directionalLight position={[5, 8, 6]} intensity={1.0} castShadow />
+            <color attach="background" args={[base]} />
+            <fog attach="fog" args={[base, 13, 28]} />
+            <ambientLight intensity={dark ? 0.45 : 0.85} />
+            <hemisphereLight args={['#cfd6e4', '#1a1f2b', dark ? 0.5 : 0.8]} />
+            <directionalLight position={[5, 8, 6]} intensity={dark ? 1.0 : 1.3} castShadow />
             <directionalLight position={[-6, 4, -4]} intensity={0.4} color="#FACC15" />
             <Suspense fallback={null}>
               <FactoryRig pointer={pointer} />
@@ -244,15 +253,8 @@ export function Background3D() {
           </Canvas>
         </CanvasErrorBoundary>
       </div>
-      {/* Dark veil to dim the scene and keep foreground text fully readable. */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'radial-gradient(125% 125% at 50% 40%, rgba(11,15,23,0.55) 0%, rgba(11,15,23,0.8) 100%)',
-        }}
-      />
+      {/* Veil to dim the scene and keep foreground text fully readable. */}
+      <div style={{ position: 'absolute', inset: 0, background: veil }} />
     </div>
   );
 }

@@ -2,7 +2,8 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useStore } from '@/store/useStore';
 import { CreditsBadge } from './CreditsBadge';
-import { Logo, MachineIcon, InboxIcon, ChatIcon, LogoutIcon, UserIcon } from './icons';
+import { ThemeToggle } from './ThemeToggle';
+import { Logo, MachineIcon, InboxIcon, ChatIcon, LogoutIcon, UserIcon, CrownIcon } from './icons';
 
 type HeaderVariant = 'app' | 'landing';
 
@@ -16,6 +17,7 @@ const NAV = [
   { to: '/machine', label: 'Application', Icon: MachineIcon },
   { to: '/inbox', label: 'Inbox', Icon: InboxIcon },
   { to: '/feedback', label: 'Feedback', Icon: ChatIcon },
+  { to: '/plans', label: 'Abonnement', Icon: CrownIcon },
 ];
 
 function initials(first?: string, last?: string) {
@@ -79,6 +81,7 @@ export function Header({ variant = 'app' }: HeaderProps = {}) {
         {/* Right cluster — landing: auth buttons; app: credits + avatar */}
         {isLanding ? (
           <div className="flex items-center gap-2">
+            <ThemeToggle className="mr-1" />
             <Link
               to="/login"
               className="btn px-4 py-2 text-sm text-white/80 hover:text-white"
