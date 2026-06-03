@@ -4,6 +4,7 @@ import { OrbitControls } from '@react-three/drei';
 import type { JobOffer } from '@/types';
 import { MachineScene } from './MachineScene';
 import type { MachineActionType, MachinePhase } from './machineTypes';
+import { useTheme } from '@/theme';
 
 interface MachineCanvasProps {
   offer: JobOffer | null;
@@ -17,6 +18,8 @@ interface MachineCanvasProps {
 }
 
 export function MachineCanvas(props: MachineCanvasProps) {
+  const { resolved } = useTheme();
+  const base = resolved === 'dark' ? '#0b0f17' : '#eef2f7';
   return (
     <Canvas
       shadows
@@ -24,8 +27,8 @@ export function MachineCanvas(props: MachineCanvasProps) {
       camera={{ position: [6.5, 4.2, 9], fov: 42 }}
       gl={{ antialias: true, alpha: false }}
     >
-      <color attach="background" args={['#0b0f17']} />
-      <fog attach="fog" args={['#0b0f17', 16, 32]} />
+      <color attach="background" args={[base]} />
+      <fog attach="fog" args={[base, 16, 32]} />
       <Suspense fallback={null}>
         <MachineScene {...props} />
       </Suspense>
