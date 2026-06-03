@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Layout } from '@/components/Layout';
 import { useStore } from '@/store/useStore';
@@ -13,9 +14,18 @@ import {
   CheckIcon,
   UploadIcon,
   CloseIcon,
+  BoltIcon,
+  ArrowRightIcon,
 } from '@/components/icons';
 
 const CONTRACTS: ContractType[] = ['CDI', 'CDD', 'Freelance', 'Stage', 'Alternance'];
+
+type Tab = 'cv' | 'perso' | 'files';
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'cv', label: 'CV' },
+  { id: 'perso', label: 'Personnel' },
+  { id: 'files', label: 'Fichiers' },
+];
 
 function initials(first?: string, last?: string) {
   return `${first?.[0] ?? ''}${last?.[0] ?? ''}`.toUpperCase() || 'U';
@@ -26,6 +36,7 @@ interface Draft {
   lastName: string;
   job: string;
   location: string;
+  phone: string;
   contract: ContractType;
   bio: string;
   skills: string[];
@@ -38,6 +49,7 @@ function toDraft(user: User): Draft {
     lastName: user.lastName,
     job: user.job,
     location: user.location,
+    phone: user.phone,
     contract: user.contract,
     bio: user.bio,
     skills: user.cvAnalysis?.skills ?? [],
@@ -47,8 +59,10 @@ function toDraft(user: User): Draft {
 
 export function ProfilePage() {
   const user = useStore((s) => s.user);
+  const credits = useStore((s) => s.credits);
   const updateProfile = useStore((s) => s.updateProfile);
 
+  const [tab, setTab] = useState<Tab>('cv');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -118,6 +132,7 @@ export function ProfilePage() {
         lastName: draft.lastName,
         job: draft.job,
         location: draft.location,
+        phone: draft.phone,
         contract: draft.contract,
         bio: draft.bio,
         cvAnalysis: nextAnalysis,
@@ -132,67 +147,49 @@ export function ProfilePage() {
 
   return (
     <Layout>
-      {/* Hidden picker for CV / LinkedIn PDF import */}
-      <input
-        ref={fileRef}
-        type="file"
-        accept=".pdf,.txt"
-        className="hidden"
-        onChange={handleImportPdf}
-      />
+      <input ref={fileRef} type="file" accept=".pdf,.txt" className="hidden" onChange={handleImportPdf} />
 
-      {/* Identity card */}
+      {/* Credits banner */}
+      <Link
+        to="/plans"
+        className="glass flex items-center justify-between rounded-2xl px-4 py-3 transition hover:bg-white/10"
+      >
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-match text-white">
+            <BoltIcon width={20} height={20} />
+          </span>
+          <div className="leading-tight">
+            <p className="font-semibold">
+              <span className="text-ruban">{credits?.remaining ?? 0}</span> crédits restants
+            </p>
+            <p className="text-xs text-white/50">Voir les abonnements</p>
+          </div>
+        </div>
+        <ArrowRightIcon width={18} height={18} className="text-white/40" />
+      </Link>
+
+      {/* Identity */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass overflow-hidden rounded-3xl"
+        className="glass mt-4 overflow-hidden rounded-3xl"
       >
-        <div className="h-24 bg-gradient-to-r from-ruban/30 via-amber-500/15 to-transparent" />
+        <div className="h-20 bg-gradient-to-r from-ruban/30 via-amber-500/15 to-transparent" />
         <div className="px-6 pb-6 sm:px-8">
-          <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex items-end gap-4">
               {user.photoUrl ? (
-                <img
-                  src={user.photoUrl}
-                  alt="Profil"
-                  className="h-24 w-24 rounded-3xl object-cover ring-4 ring-ink"
-                />
+                <img src={user.photoUrl} alt="Profil" className="h-20 w-20 rounded-3xl object-cover ring-4 ring-ink" />
               ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-ruban to-amber-600 font-display text-3xl font-bold text-ink ring-4 ring-ink">
+                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-ruban to-amber-600 font-display text-2xl font-bold text-ink ring-4 ring-ink">
                   {initials(user.firstName, user.lastName)}
                 </div>
               )}
               <div className="pb-1">
-                {editing && draft ? (
-                  <div className="flex flex-wrap gap-2">
-                    <input
-                      className="field !py-1.5 w-32"
-                      value={draft.firstName}
-                      onChange={(e) => setDraft({ ...draft, firstName: e.target.value })}
-                      placeholder="Prénom"
-                    />
-                    <input
-                      className="field !py-1.5 w-32"
-                      value={draft.lastName}
-                      onChange={(e) => setDraft({ ...draft, lastName: e.target.value })}
-                      placeholder="Nom"
-                    />
-                  </div>
-                ) : (
-                  <h1 className="font-display text-2xl font-bold">
-                    {user.firstName} {user.lastName}
-                  </h1>
-                )}
-                {editing && draft ? (
-                  <input
-                    className="field mt-2 !py-1.5"
-                    value={draft.job}
-                    onChange={(e) => setDraft({ ...draft, job: e.target.value })}
-                    placeholder="Métier"
-                  />
-                ) : (
-                  <p className="text-white/55">{user.job}</p>
-                )}
+                <h1 className="font-display text-2xl font-bold">
+                  {user.firstName} {user.lastName}
+                </h1>
+                <p className="text-white/55">{user.job || 'Métier non renseigné'}</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -207,103 +204,75 @@ export function ProfilePage() {
                   </button>
                 </>
               ) : (
-                <>
-                  <button
-                    onClick={openImport}
-                    disabled={importing}
-                    className="btn bg-white/10 px-4 py-2 text-sm hover:bg-white/15 disabled:opacity-50"
-                  >
-                    <UploadIcon width={15} height={15} />
-                    {importing ? 'Analyse…' : 'Importer (CV / PDF)'}
-                  </button>
-                  <button onClick={startEdit} className="btn bg-ruban px-4 py-2 text-sm text-ink hover:bg-amber-400">
-                    Modifier
-                  </button>
-                </>
+                <button onClick={startEdit} className="btn bg-ruban px-4 py-2 text-sm text-ink hover:bg-amber-400">
+                  Modifier
+                </button>
               )}
             </div>
-          </div>
-
-          {/* Info row */}
-          {editing && draft ? (
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <EditField label="Localisation" value={draft.location} onChange={(v) => setDraft({ ...draft, location: v })} />
-              <div>
-                <label className="label">Contrat recherché</label>
-                <select
-                  className="field"
-                  value={draft.contract}
-                  onChange={(e) => setDraft({ ...draft, contract: e.target.value as ContractType })}
-                >
-                  {CONTRACTS.map((c) => (
-                    <option key={c} value={c} className="bg-panel">
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-end text-sm text-white/40">
-                <span className="truncate">{user.email}</span>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <Info Icon={MailIcon} label="Email" value={user.email} />
-              <Info Icon={MapPinIcon} label="Localisation" value={user.location} />
-              <Info Icon={BriefcaseIcon} label="Contrat recherché" value={user.contract} />
-            </div>
-          )}
-
-          {/* Bio */}
-          {editing && draft ? (
-            <textarea
-              className="field mt-4 resize-none"
-              rows={3}
-              value={draft.bio}
-              onChange={(e) => setDraft({ ...draft, bio: e.target.value })}
-              placeholder="Présentation"
-            />
-          ) : (
-            user.bio && (
-              <p className="mt-4 rounded-xl bg-white/5 p-3 text-sm leading-relaxed text-white/70">
-                {user.bio}
-              </p>
-            )
-          )}
-
-          {/* CV file */}
-          <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-match/15 text-match">
-              <CheckIcon width={18} height={18} />
-            </span>
-            <span className="text-sm">
-              <span className="font-medium text-white">{user.cvFileName}</span>
-              <span className="ml-2 text-white/40">CV — envoyé aux entreprises lors d'un match</span>
-            </span>
           </div>
         </div>
       </motion.div>
 
-      {/* Skills + experiences */}
-      {editing && draft ? (
-        <EditPanels draft={draft} setDraft={setDraft} />
-      ) : cv ? (
-        <ReadPanels cv={cv} />
-      ) : (
-        <EmptyProfile onImport={openImport} onManual={startEdit} importing={importing} />
-      )}
+      {/* Tabs */}
+      <div className="mt-5 flex gap-1 border-b border-white/10">
+        {TABS.map((t) => {
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`relative px-4 py-2.5 text-sm font-semibold transition ${
+                active ? 'text-ruban' : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              {t.label}
+              {active && (
+                <motion.span layoutId="profile-tab" className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-ruban" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab content */}
+      <div className="mt-6">
+        {tab === 'cv' &&
+          (editing && draft ? (
+            <CVEdit draft={draft} setDraft={setDraft} education={cv?.education ?? []} />
+          ) : cv ? (
+            <CVRead cv={cv} />
+          ) : (
+            <EmptyProfile onImport={openImport} onManual={startEdit} importing={importing} />
+          ))}
+
+        {tab === 'perso' &&
+          (editing && draft ? (
+            <PersonnelEdit draft={draft} setDraft={setDraft} email={user.email} />
+          ) : (
+            <PersonnelRead user={user} />
+          ))}
+
+        {tab === 'files' && (
+          <FilesTab cvFileName={user.cvFileName} onImport={openImport} importing={importing} />
+        )}
+      </div>
     </Layout>
   );
 }
 
-// --- Read views --------------------------------------------------------------
+// --- CV tab ------------------------------------------------------------------
 
-function ReadPanels({ cv }: { cv: CVAnalysis }) {
+function CVRead({ cv }: { cv: CVAnalysis }) {
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.3fr]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
       <div className="space-y-6">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-3xl p-6">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/40">Secteurs recommandés</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-white/40">Secteurs recommandés</h2>
+            <span className="rounded-full bg-ruban/15 px-2.5 py-0.5 text-xs font-semibold text-ruban">
+              Score {cv.score}/100
+            </span>
+          </div>
           <div className="flex flex-wrap gap-2">
             {cv.suggestedSectors.map((s) => (
               <span
@@ -328,8 +297,25 @@ function ReadPanels({ cv }: { cv: CVAnalysis }) {
                 {skill}
               </span>
             ))}
+            {cv.skills.length === 0 && <span className="text-sm text-white/40">Aucune compétence</span>}
           </div>
         </motion.div>
+
+        {cv.education.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-3xl p-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/40">Formation</h2>
+            <ul className="space-y-3">
+              {cv.education.map((ed, i) => (
+                <li key={i}>
+                  <p className="font-semibold">{ed.degree}</p>
+                  <p className="text-sm text-white/50">
+                    {ed.school} · {ed.year}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
       </div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-3xl p-6">
@@ -352,7 +338,9 @@ function ReadPanels({ cv }: { cv: CVAnalysis }) {
                   {exp.type}
                 </span>
               </div>
-              <p className="text-sm text-white/50">{exp.company} · {exp.period}</p>
+              <p className="text-sm text-white/50">
+                {exp.company} · {exp.period}
+              </p>
               <p className="mt-0.5 text-sm text-white/60">{exp.description}</p>
             </li>
           ))}
@@ -365,7 +353,159 @@ function ReadPanels({ cv }: { cv: CVAnalysis }) {
   );
 }
 
-// --- Edit views --------------------------------------------------------------
+function CVEdit({
+  draft,
+  setDraft,
+  education,
+}: {
+  draft: Draft;
+  setDraft: (d: Draft) => void;
+  education: CVAnalysis['education'];
+}) {
+  return (
+    <div className="space-y-6">
+      <EditPanels draft={draft} setDraft={setDraft} />
+      {education.length > 0 && (
+        <div className="glass rounded-3xl p-6">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/40">
+            Formation <span className="text-white/30">(via import CV)</span>
+          </h2>
+          <ul className="space-y-3">
+            {education.map((ed, i) => (
+              <li key={i}>
+                <p className="font-semibold">{ed.degree}</p>
+                <p className="text-sm text-white/50">
+                  {ed.school} · {ed.year}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Personnel tab -----------------------------------------------------------
+
+function PersonnelRead({ user }: { user: User }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-3xl p-6">
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/40">Informations</h2>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Info Icon={MailIcon} label="Email" value={user.email} />
+        <Info Icon={BriefcaseIcon} label="Téléphone" value={user.phone || '—'} />
+        <Info Icon={MapPinIcon} label="Localisation" value={user.location || '—'} />
+        <Info Icon={BriefcaseIcon} label="Contrat recherché" value={user.contract} />
+      </div>
+      {user.bio && (
+        <p className="mt-4 rounded-xl bg-white/5 p-3 text-sm leading-relaxed text-white/70">{user.bio}</p>
+      )}
+    </motion.div>
+  );
+}
+
+function PersonnelEdit({
+  draft,
+  setDraft,
+  email,
+}: {
+  draft: Draft;
+  setDraft: (d: Draft) => void;
+  email: string;
+}) {
+  return (
+    <div className="glass rounded-3xl p-6">
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/40">Informations</h2>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <EditField label="Prénom" value={draft.firstName} onChange={(v) => setDraft({ ...draft, firstName: v })} />
+        <EditField label="Nom" value={draft.lastName} onChange={(v) => setDraft({ ...draft, lastName: v })} />
+        <EditField label="Métier" value={draft.job} onChange={(v) => setDraft({ ...draft, job: v })} />
+        <EditField label="Localisation" value={draft.location} onChange={(v) => setDraft({ ...draft, location: v })} />
+        <EditField label="Téléphone" value={draft.phone} onChange={(v) => setDraft({ ...draft, phone: v })} />
+        <div>
+          <label className="label">Contrat recherché</label>
+          <select
+            className="field"
+            value={draft.contract}
+            onChange={(e) => setDraft({ ...draft, contract: e.target.value as ContractType })}
+          >
+            {CONTRACTS.map((c) => (
+              <option key={c} value={c} className="bg-panel">
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="mt-3">
+        <label className="label">Email</label>
+        <input className="field opacity-60" value={email} disabled />
+      </div>
+      <div className="mt-3">
+        <label className="label">Présentation</label>
+        <textarea
+          className="field resize-none"
+          rows={3}
+          value={draft.bio}
+          onChange={(e) => setDraft({ ...draft, bio: e.target.value })}
+          placeholder="Quelques mots sur vous…"
+        />
+      </div>
+    </div>
+  );
+}
+
+// --- Files tab ---------------------------------------------------------------
+
+function FilesTab({
+  cvFileName,
+  onImport,
+  importing,
+}: {
+  cvFileName: string;
+  onImport: () => void;
+  importing: boolean;
+}) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-3xl p-6">
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/40">CV / Documents</h2>
+
+      {cvFileName ? (
+        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-match/15 text-match">
+            <CheckIcon width={20} height={20} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium text-white">{cvFileName}</p>
+            <p className="text-xs text-white/40">Envoyé aux entreprises lors d'un match</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-match/15 px-2.5 py-1 text-xs font-semibold text-match">
+            Sélectionné
+          </span>
+        </div>
+      ) : (
+        <p className="rounded-2xl border border-dashed border-white/15 px-4 py-6 text-center text-sm text-white/40">
+          Aucun CV importé pour l'instant.
+        </p>
+      )}
+
+      <button
+        onClick={onImport}
+        disabled={importing}
+        className="btn mt-4 w-full bg-ruban py-3 text-ink hover:bg-amber-400 disabled:opacity-50"
+      >
+        <UploadIcon width={16} height={16} />
+        {importing ? 'Analyse…' : cvFileName ? 'Remplacer le CV (PDF)' : 'Importer un CV (PDF)'}
+      </button>
+      <p className="mt-3 text-center text-xs text-white/30">
+        Le PDF doit contenir du texte (pas une photo scannée). On en extrait vos expériences et compétences.
+      </p>
+    </motion.div>
+  );
+}
+
+// --- Skills + experiences editor (shared) ------------------------------------
 
 function EditPanels({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft) => void }) {
   const [skillInput, setSkillInput] = useState('');
@@ -379,10 +519,7 @@ function EditPanels({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft) =>
   const addExperience = () =>
     setDraft({
       ...draft,
-      experiences: [
-        { role: '', company: '', period: '', type: 'CDI', description: '' },
-        ...draft.experiences,
-      ],
+      experiences: [{ role: '', company: '', period: '', type: 'CDI', description: '' }, ...draft.experiences],
     });
 
   const updateExp = (i: number, patch: Partial<CVExperience>) =>
@@ -395,7 +532,7 @@ function EditPanels({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft) =>
     setDraft({ ...draft, experiences: draft.experiences.filter((_, idx) => idx !== i) });
 
   return (
-    <div className="mt-6 space-y-6">
+    <>
       {/* Skills editor */}
       <div className="glass rounded-3xl p-6">
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white/40">
@@ -501,7 +638,7 @@ function EditPanels({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft) =>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -517,7 +654,7 @@ function EmptyProfile({
   importing: boolean;
 }) {
   return (
-    <div className="glass mt-6 grid place-items-center rounded-3xl py-16 text-center">
+    <div className="glass grid place-items-center rounded-3xl py-16 text-center">
       <div className="max-w-md px-6">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-ruban/15 text-ruban">
           <UploadIcon width={28} height={28} />
@@ -525,9 +662,8 @@ function EmptyProfile({
         <h2 className="font-display text-lg font-bold">Complétez votre profil</h2>
         <p className="mt-1.5 text-sm text-white/50">
           Importez votre <strong className="text-white/70">CV</strong> ou le
-          <strong className="text-white/70"> PDF de votre profil LinkedIn</strong> (sur LinkedIn :
-          « Plus → Enregistrer au format PDF ») — on en extrait automatiquement vos expériences,
-          stages et compétences.
+          <strong className="text-white/70"> PDF de votre profil LinkedIn</strong> — on en extrait
+          automatiquement vos expériences, stages et compétences.
         </p>
         <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
           <button
@@ -542,9 +678,6 @@ function EmptyProfile({
             Saisir manuellement
           </button>
         </div>
-        <p className="mt-3 text-xs text-white/30">
-          Le PDF doit contenir du texte (pas une photo scannée).
-        </p>
       </div>
     </div>
   );
@@ -562,15 +695,7 @@ function Info({ Icon, label, value }: { Icon: typeof MailIcon; label: string; va
   );
 }
 
-function EditField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function EditField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="label">{label}</label>
